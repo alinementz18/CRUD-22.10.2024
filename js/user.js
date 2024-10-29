@@ -1,23 +1,38 @@
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+// Adiciona um listener que aguarda o carregamento completo do DOM
+document.addEventListener('DOMContentLoaded', async () => {
+    // Obtém o token do localStorage
+    const token = localStorage.getItem('token');
 
-    const response = await fetch('http://localhost:3000/register', { // Mudei para o endpoint de registro
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+    // Verifica se não há token; se não houver, redireciona para a página de login
+    if (!token) {
+        window.location.href = 'index.html'; // Redireciona para o login se não houver token
+        return; // Interrompe a execução do código
+    }
+
+    // Obtém dados do usuário da API
+    const response = await fetch('http://localhost:3000/user', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}` // Adiciona o token no cabeçalho de autorização
+        }
     });
 
+    // Seleciona os elementos onde as informações serão exibidas
+    const userEmailElement = document.getElementById('userEmail');
     const messageElement = document.getElementById('message');
+
+    // Verifica se a resposta da API foi bem-sucedida
     if (response.ok) {
-        messageElement.textContent = 'Usuário registrado com sucesso!';
-        setTimeout(() => {
-            window.location.href = 'login.html'; // Aqui redireciona para a página de login após registro
-        }, 2000);
+        // Converte a resposta em JSON
+        const userData = await response.json();
+        userEmailElement.textContent = userData.email; // Exibe o email do usuário na página
+
+        // Preenche os campos de entrada com os dados do usuário
+        document.getElementById('newEmail').value = userData.email; // Preenche o novo email com o email atual
     } else {
-        const errorMessage = await response.text();
-        messageElement.textContent = errorMessage;
+        // Se houver erro ao obter dados do usuário, exibe uma mensagem
+        messageElement.textContent = 'Erro ao obter dados do usuário.';
     }
+ 
 });

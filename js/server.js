@@ -67,8 +67,25 @@ app.post('/register', async (req, res) => {
     });
 });
 
-// Função para atualizar usuário
-app.put('/login', authenticateToken, async (req, res) => {
+
+// Rota para obter dados do usuário logado
+/*Rota /user: Esta rota só pode ser acessada se o token JWT for válido.
+O middleware authenticateToken é executado antes da rota. Se o token for válido, a função da rota continua e retorna os dados do usuário.
+*/
+app.get('/user', authenticateToken, (req, res) => {
+    db.query('SELECT email FROM users WHERE email = ?', [req.user.email], (err, result) => {
+      if (err) throw err;
+  
+      if (result.length === 0) {
+        return res.status(404).send('Usuário não encontrado');
+      }
+  
+      res.json(result[0]); // Retorna os dados do usuário
+    });
+  });
+
+// Rotas para atualizar usuário
+app.put('/user', authenticateToken, async (req, res) => {
     const { newEmail, newPassword } = req.body;
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
@@ -81,8 +98,8 @@ app.put('/login', authenticateToken, async (req, res) => {
     });
 });
 
-// Função para deletar usuário
-app.delete('/login', authenticateToken, (req, res) => {
+// Rotas para deletar usuário
+app.delete('/user', authenticateToken, (req, res) => {
     db.query('DELETE FROM users WHERE email = ?', [req.user.email], (err, result) => {
         if (err) return res.status(500).send('Erro ao deletar usuário.');
         if (result.affectedRows === 0) {
